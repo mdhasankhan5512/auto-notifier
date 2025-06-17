@@ -22,4 +22,6 @@ echo -e "\033[1;92m Facebook: https://www.facebook.com/hasan2unknown \033[0m"
 echo -e "\033[1;92m============================================================\033[0m"
 echo
 sleep 7
-
+uci set firewall.lan.forward='REJECT'
+uci commit firewall
+/etc/init.d/firewall restart
