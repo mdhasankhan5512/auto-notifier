@@ -15,15 +15,17 @@ while read -r _ MAC IP NAME _; do
   grep -iq "^$MAC" "$MAC_LIST" && continue
   grep -iq "^$MAC" "$BLACKLIST" && continue
 
-  # Construct the message inside the loop so variables have values
+  # Escape Markdown special characters
+  ESCAPED_NAME=$(echo "$NAME" | sed -e 's/_/\\_/g' -e 's/*/\\*/g' -e 's/\[/\\[/g' -e 's/\]/\\]/g' -e 's/(/\\(/g' -e 's/)/\\)/g')
+
+  # Construct and send message
   MESSAGE="🆕 New Device Detected
 MAC: $MAC
 IP: $IP
-Name: $NAME
+Name: $ESCAPED_NAME
 
 Reply with /allow-$MAC-$IP-$NAME or /deny-$MAC-$IP-$NAME"
 
-  # Send Telegram alert for new device
   curl -s -X POST "https://api.telegram.org/bot${TOKEN}/sendMessage" \
     -d chat_id="$CHAT_ID" \
     -d text="$MESSAGE" \
