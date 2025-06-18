@@ -6,7 +6,8 @@ LEASE_FILE="/tmp/dhcp.leases"
 TOKEN="YOUR TELEGRAM BOT TOKEN"
 CHAT_ID="YOUR TELEGRAM CHAT ID"
 
-touch "$MAC_LIST" "$BLACKLIST"
+[ -f "$MAC_LIST" ] || touch "$MAC_LIST"
+[ -f "$BLACKLIST" ] || touch "$BLACKLIST"
 
 while read -r _ MAC IP NAME _; do
   [ -z "$NAME" ] && NAME="*"
