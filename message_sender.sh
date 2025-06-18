@@ -1,6 +1,6 @@
 #!/bin/sh
 
-TOKEN="YOUR TELEGRAM BOT TOKEN"
+TOKEN="6754837023:AAF1BF_7FLDqpE-OsHoE38vTMjWB-MWEMcI"
 MAC_LIST="/root/mac.txt"
 BLACKLIST="/root/blacklisted.txt"
 
@@ -29,7 +29,7 @@ echo "$UPDATES" | jq -r '.result[].message.text' | grep -E '^/(allow|deny|RBlack
           uci add firewall rule
           uci set firewall.@rule[-1].src='lan'
           uci set firewall.@rule[-1].dest='wan'
-          uci set firewall.@rule[-1].name="$NAME"
+          uci set firewall.@rule[-1].name="$(echo "$NAME" | sed 's/"/\\"/g')"
           uci add_list firewall.@rule[-1].src_mac="$MAC"
           uci set firewall.@rule[-1].target='ACCEPT'
           uci commit firewall
@@ -43,35 +43,37 @@ echo "$UPDATES" | jq -r '.result[].message.text' | grep -E '^/(allow|deny|RBlack
       ;;
 
     deny)
-      # 1) Blacklist if not already
+      BLACKLISTED=0
+      RULE_REMOVED=0
+
+      # 1) Add to blacklist if not already there
       if ! grep -iq "^$MAC" "$BLACKLIST"; then
         echo "$MAC $IP $NAME" >> "$BLACKLIST"
         sed -i "/\b$MAC\b/d" /tmp/dhcp.leases
+        BLACKLISTED=1
+      fi
 
-        RULE_REMOVED=0
-        # 2) Find and remove any matching firewall rule
-        for SECTION in $(uci show firewall | \
-                         grep "firewall\.\(.*\)\.src_mac='${MAC}'" | \
-                         sed -e "s/.*firewall\.\(.*\)\.src_mac.*/\1/"); do
-          uci delete firewall."$SECTION"
-          RULE_REMOVED=1
-        done
+      # 2) Remove any firewall rule for the MAC
+      for SECTION in $(uci show firewall | grep ".src_mac='${MAC}'" | cut -d'.' -f2 | cut -d'=' -f1); do
+        uci delete firewall."$SECTION"
+        RULE_REMOVED=1
+      done
 
-        if [ "$RULE_REMOVED" -eq 1 ]; then
-          uci commit firewall
-          /etc/init.d/firewall restart
-        fi
+      if [ "$RULE_REMOVED" -eq 1 ]; then
+        uci commit firewall
+        /etc/init.d/firewall restart
+      fi
 
-        # 3) Notify only if we blacklisted AND removed at least one rule
-        if [ "$RULE_REMOVED" -eq 1 ]; then
-          curl -s -X POST "https://api.telegram.org/bot${TOKEN}/sendMessage" \
-            -d text="⛔ $MAC ($NAME) has been denied internet access." \
-            -d chat_id="$CHAT_ID"
-        fi
+      # 3) Notify if either blacklisted or firewall rule removed
+      if [ "$BLACKLISTED" -eq 1 ] || [ "$RULE_REMOVED" -eq 1 ]; then
+        curl -s -X POST "https://api.telegram.org/bot${TOKEN}/sendMessage" \
+          -d text="⛔ $MAC ($NAME) at $IP has been *denied* internet access.
+$( [ "$BLACKLISTED" -eq 1 ] && echo '📛 Added to blacklist.' )
+$( [ "$RULE_REMOVED" -eq 1 ] && echo '🧱 Firewall rule removed.' )" \
+          -d parse_mode="Markdown" \
+          -d chat_id=$(echo "$UPDATES" | jq '.result[-1].message.chat.id')
       fi
       ;;
-
-
 
     RBlacklist)
       sed -i "/$MAC/d" "$BLACKLIST"
