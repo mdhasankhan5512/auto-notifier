@@ -62,7 +62,8 @@ This project is licensed under a creditware license:
 
 You are free to use, modify, and distribute this software for personal or commercial use, as long as credit is given to the original author.
 
-Author: Md Hasan Khan
-🔗 Facebook Profile
+## 👤 Author
+
+This program was written by [Md Hasan Khan](https://www.facebook.com/hasan2unknown).
 
 
