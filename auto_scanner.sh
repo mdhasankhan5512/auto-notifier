@@ -10,7 +10,7 @@ CHAT_ID="YOUR TELEGRAM CHAT ID"
 [ -f "$BLACKLIST" ] || touch "$BLACKLIST"
 
 while read -r _ MAC IP NAME _; do
-  [ -z "$NAME" ] && NAME="Unknown Device"
+[ "$NAME" = "*" ] && NAME="Unknown Device"
 
   # Skip if already approved or blacklisted
   grep -iq "^$MAC" "$MAC_LIST" && continue
