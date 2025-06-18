@@ -37,6 +37,33 @@ else
   echo "⚠️ Skipped Telegram setup. You can manually edit /usr/bin/auto_scanner.sh and /usr/bin/message_sender.sh later."
 fi
 
+# Ask for admin device name and MAC address (without colons)
+read -p "Enter first admin device name: " ANAME
+read -p "Enter MAC address of admin device (without colons): " AMAC_RAW
+
+# Validate MAC length (should be 12 hex digits)
+if ! echo "$AMAC_RAW" | grep -qiE '^[0-9a-f]{12}$'; then
+  echo "❌ Invalid MAC address format. Must be 12 hex digits without colons."
+  exit 1
+fi
+
+# Convert MAC to colon format (xx:xx:xx:xx:xx:xx)
+AMAC=$(echo "$AMAC_RAW" | sed 's/../&:/g;s/:$//')
+
+echo "Adding firewall rule for device '$ANAME' with MAC $AMAC..."
+
+# Add firewall rule via uci
+uci add firewall rule
+uci set firewall.@rule[-1].src='lan'
+uci set firewall.@rule[-1].dest='wan'
+uci set firewall.@rule[-1].name="$ANAME"
+uci add_list firewall.@rule[-1].src_mac="$AMAC"
+uci set firewall.@rule[-1].target='ACCEPT'
+uci commit firewall
+/etc/init.d/firewall restart
+
+echo "✅ Firewall rule added and firewall restarted."
+
 # Add to crontab (run every minute)
 /etc/init.d/cron enable
 /etc/init.d/cron start
@@ -45,7 +72,7 @@ fi
 # Add loop.sh to rc.local if not already added
 grep -q '/usr/bin/loop.sh' /etc/rc.local || sed -i '/exit 0/i /usr/bin/loop.sh &' /etc/rc.local
 
-# Show credit in light green (unchanged)
+# Show credit in light green
 echo
 echo -e "\033[1;92m======================== C R E D I T ========================\033[0m"
 echo -e "\033[1;92m This script is created by Md Hasan Khan\033[0m"
@@ -54,7 +81,7 @@ echo -e "\033[1;92m============================================================\
 echo
 sleep 7
 
-# Apply default firewall rule
+# Apply default firewall zone forward policy
 uci set firewall.@zone[0].forward='REJECT'
 uci commit firewall
 /etc/init.d/firewall restart
