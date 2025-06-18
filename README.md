@@ -29,7 +29,7 @@ To ensure the script functions correctly, you **must edit the OpenWrt firewall s
 
   ![Firewall Settings - After](firewall_after.png)
 
-If not configured properly,  Denied devices will be blacklisted from geting internet access.
+If not configured properly,  Denied devices will not be blacklisted from geting internet access.
 
 ---
 🛠 Requirements
