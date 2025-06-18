@@ -32,14 +32,15 @@ To ensure the script functions correctly, you **must edit the OpenWrt firewall s
 If not configured properly,  Denied devices will not be blacklisted from geting internet access.
 
 ---
-🛠 Requirements
-OpenWrt router
 
-Telegram bot token and chat ID
+## 🛠 Requirements
 
-Internet connectivity
+| Command Format                     | Description                                 |
+|-------------------------------------|---------------------------------------------|
+| `OpenWrt router`                    | To run the script                       |
+| `Telegram bot token and chat ID`    | To send the notifications               |
+| `Internet connectivity`             | To be able to send the notifications    |
 
-Packages: jq, coreutils-tac
 
 ## 📦 Installation
 
