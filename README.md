@@ -35,8 +35,8 @@ If not configured properly,  Denied devices will not be blacklisted from geting 
 
 ## 🛠 Requirements
 
-| Command Format                     | Description                                 |
-|-------------------------------------|---------------------------------------------|
+|        Must Have These              |      Resaons                            |
+|-------------------------------------|-----------------------------------------|
 | `OpenWrt router`                    | To run the script                       |
 | `Telegram bot token and chat ID`    | To send the notifications               |
 | `Internet connectivity`             | To be able to send the notifications    |
