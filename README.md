@@ -48,16 +48,21 @@ Run the following command in your terminal to install:
 wget https://raw.githubusercontent.com/mdhasankhan5512/auto-notifier/refs/heads/main/setup_notifier.sh && chmod +x setup_notifier.sh && sh setup_notifier.sh
 ```
 
-💬 Telegram Commands Format
-Command	Description
-/allow-MAC-IP-Name	Allow internet access for the device
-/deny-MAC-IP-Name	Deny access and blacklist the MAC
-/RBlacklist-MAC-IP-Name	Remove MAC from blacklist and reallow
+## 💬 Telegram Commands Format
 
-🔍 Example:
+| Command Format                     | Description                                 |
+|-----------------------------------|---------------------------------------------|
+| `/allow-MAC-IP-Name`              | Allow internet access for the device        |
+| `/deny-MAC-IP-Name`               | Deny access and blacklist the MAC           |
+| `/RBlacklist-MAC-IP-Name`         | Remove MAC from blacklist and re-allow      |
+
+### 🔍 Example
+
+```text
 /allow-11:22:33:44:55:66-192.168.1.100-JohnsPhone
+```
 
-📃 License
+## 📃 License
 This project is licensed under a creditware license:
 
 You are free to use, modify, and distribute this software for personal or commercial use, as long as credit is given to the original author.
