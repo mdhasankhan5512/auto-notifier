@@ -71,7 +71,10 @@ This project is licensed under a **Creditware License** (a modified MIT License)
 See [LICENSE](./LICENSE.md) for details.
 
 
-You are free to use, modify, and distribute this software for personal or commercial use, as long as credit is given to the original author.
+## Disclaimer
+
+**Note:** If your Wi-Fi drops, your snack disappears, and your cat walks across your keyboard causing chaos — I’m not to blame. You’re officially on your own! 🐱💻😂
+
 
 ## 👤 Author
 
