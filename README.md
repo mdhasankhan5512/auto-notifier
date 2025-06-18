@@ -67,7 +67,7 @@ wget https://raw.githubusercontent.com/mdhasankhan5512/auto-notifier/refs/heads/
 This project is licensed under a **Creditware License** (a modified MIT License).  
 > You may use, modify, or distribute this project freely **only if credit is clearly given to the original author**.
 
-See [LICENSE](./LICENSE) for details.
+See [LICENSE](./LICENSE.md) for details.
 
 
 You are free to use, modify, and distribute this software for personal or commercial use, as long as credit is given to the original author.
