@@ -1,6 +1,6 @@
 #!/bin/sh
 
-TOKEN="6754837023:AAF1BF_7FLDqpE-OsHoE38vTMjWB-MWEMcI"
+TOKEN="YOUR TELEGRAM BOT TOKEN"
 MAC_LIST="/root/mac.txt"
 BLACKLIST="/root/blacklisted.txt"
 
