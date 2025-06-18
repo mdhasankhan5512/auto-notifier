@@ -45,6 +45,11 @@ echo "$UPDATES" | jq -r '.result[].message.text' | grep -E '^/(allow|deny|RBlack
     deny)
       BLACKLISTED=0
       RULE_REMOVED=0
+if grep -iq "$MAC" "$MAC_LIST"; then
+    MAC_LC=$(echo "$MAC" | tr 'A-F' 'a-f')
+    sed -i "/$MAC_LC/d" "$MAC_LIST"
+fi
+
 
       # 1) Add to blacklist if not already there
       if ! grep -iq "^$MAC" "$BLACKLIST"; then
