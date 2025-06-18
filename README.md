@@ -1,4 +1,5 @@
 # 🔔 Auto Notifier for OpenWrt
+![License](https://img.shields.io/badge/license-Creditware-blue.svg)
 
 This project automates MAC-based network access control on OpenWrt routers using Telegram Bot notifications. Devices can be allowed, denied, or restored via Telegram commands, with real-time firewall rule updates.
 
