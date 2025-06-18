@@ -40,11 +40,13 @@ Internet connectivity
 
 Packages: jq, coreutils-tac
 
-
 ## 📦 Installation
 
-wget https://raw.githubusercontent.com/mdhasankhan5512/auto-notifier/refs/heads/main/setup_notifier.sh && chmod +x setup_notifier.sh && sh setup_notifier.sh
+Run the following command in your terminal to install:
 
+```bash
+wget https://raw.githubusercontent.com/mdhasankhan5512/auto-notifier/refs/heads/main/setup_notifier.sh && chmod +x setup_notifier.sh && sh setup_notifier.sh
+```
 
 💬 Telegram Commands Format
 Command	Description
