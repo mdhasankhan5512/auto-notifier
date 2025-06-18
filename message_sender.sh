@@ -42,16 +42,35 @@ echo "$UPDATES" | jq -r '.result[].message.text' | grep -E '^/(allow|deny|RBlack
       }
       ;;
 
-       deny)
+    deny)
+      # 1) Blacklist if not already
       if ! grep -iq "^$MAC" "$BLACKLIST"; then
         echo "$MAC $IP $NAME" >> "$BLACKLIST"
         sed -i "/\b$MAC\b/d" /tmp/dhcp.leases
 
-        curl -s -X POST "https://api.telegram.org/bot${TOKEN}/sendMessage" \
-          -d text="⛔ $MAC ($NAME) has been denied internet access." \
-          -d chat_id=$(echo "$UPDATES" | jq '.result[-1].message.chat.id')
+        RULE_REMOVED=0
+        # 2) Find and remove any matching firewall rule
+        for SECTION in $(uci show firewall | \
+                         grep "firewall\.\(.*\)\.src_mac='${MAC}'" | \
+                         sed -e "s/.*firewall\.\(.*\)\.src_mac.*/\1/"); do
+          uci delete firewall."$SECTION"
+          RULE_REMOVED=1
+        done
+
+        if [ "$RULE_REMOVED" -eq 1 ]; then
+          uci commit firewall
+          /etc/init.d/firewall restart
+        fi
+
+        # 3) Notify only if we blacklisted AND removed at least one rule
+        if [ "$RULE_REMOVED" -eq 1 ]; then
+          curl -s -X POST "https://api.telegram.org/bot${TOKEN}/sendMessage" \
+            -d text="⛔ $MAC ($NAME) has been denied internet access." \
+            -d chat_id="$CHAT_ID"
+        fi
       fi
       ;;
+
 
 
     RBlacklist)
