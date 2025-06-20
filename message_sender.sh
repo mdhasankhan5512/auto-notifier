@@ -1,18 +1,49 @@
 #!/bin/sh
 
-TOKEN="YOUR TELEGRAM BOT TOKEN"
+TOKEN="Your Bot Token"
 MAC_LIST="/root/mac.txt"
 BLACKLIST="/root/blacklisted.txt"
+PROCESSED_DIR="/tmp/telegram_processed"
 
-# Get the latest 100 updates (more than 2 just to be safe)
+mkdir -p "$PROCESSED_DIR"
+
+# Get the latest 100 updates
 UPDATES=$(curl -s "https://api.telegram.org/bot${TOKEN}/getUpdates?limit=100")
 
-# Extract and prioritize latest commands per MAC
+# Process special list commands only once per message
+echo "$UPDATES" | jq -c '.result[]' | tac | while read -r LINE; do
+  MSG=$(echo "$LINE" | jq -r '.message.text')
+  CHAT_ID=$(echo "$LINE" | jq -r '.message.chat.id')
+  MSG_ID=$(echo "$LINE" | jq -r '.message.message_id')
+  HASH_FILE="$PROCESSED_DIR/msg_${MSG_ID}"
+
+  [ -f "$HASH_FILE" ] && continue
+  touch "$HASH_FILE"
+
+  case "$MSG" in
+    "/Allow-list")
+      CONTENT=$(cat "$MAC_LIST" 2>/dev/null || echo "No MACs in allow list.")
+      curl -s -X POST "https://api.telegram.org/bot${TOKEN}/sendMessage" \
+        -d chat_id="$CHAT_ID" \
+        -d text="📗 *Allowed Devices:\`\`\` $CONTENT\`\`\`" \
+        -d parse_mode="Markdown"
+      ;;
+
+    "/Black-list")
+      CONTENT=$(cat "$BLACKLIST" 2>/dev/null || echo "No MACs in blacklist.")
+      curl -s -X POST "https://api.telegram.org/bot${TOKEN}/sendMessage" \
+        -d chat_id="$CHAT_ID" \
+        -d text="📕 *Blacklisted Devices:\`\`\` $CONTENT\`\`\`" \
+        -d parse_mode="Markdown"
+      ;;
+  esac
+done
+
+# Process allow/deny/RBlacklist commands (MAC-specific)
 echo "$UPDATES" | jq -r '.result[].message.text' | grep -E '^/(allow|deny|RBlacklist)-' | tail -n 100 | tac | while read -r CMD; do
   ACTION=$(echo "$CMD" | cut -d'-' -f1 | sed 's|/||')
   MAC=$(echo "$CMD" | cut -d'-' -f2)
 
-  # Skip if already handled
   [ -f /tmp/processed_$MAC ] && continue
   touch /tmp/processed_$MAC
 
@@ -20,7 +51,6 @@ echo "$UPDATES" | jq -r '.result[].message.text' | grep -E '^/(allow|deny|RBlack
   NAME=$(echo "$CMD" | cut -d'-' -f4-)
 
   case "$ACTION" in
-
     allow)
       grep -iq "^$MAC" "$MAC_LIST" || {
         echo "$MAC $IP $NAME" >> "$MAC_LIST"
@@ -36,29 +66,23 @@ echo "$UPDATES" | jq -r '.result[].message.text' | grep -E '^/(allow|deny|RBlack
           /etc/init.d/firewall restart
         fi
 
+        CHAT_ID=$(echo "$UPDATES" | jq '.result[-1].message.chat.id')
         curl -s -X POST "https://api.telegram.org/bot${TOKEN}/sendMessage" \
           -d text="✅ $MAC ($NAME) at $IP is now allowed internet access." \
-          -d chat_id=$(echo "$UPDATES" | jq '.result[-1].message.chat.id')
+          -d chat_id="$CHAT_ID"
       }
       ;;
 
     deny)
       BLACKLISTED=0
       RULE_REMOVED=0
-if grep -iq "$MAC" "$MAC_LIST"; then
-    MAC_LC=$(echo "$MAC" | tr 'A-F' 'a-f')
-    sed -i "/$MAC_LC/d" "$MAC_LIST"
-fi
 
-
-      # 1) Add to blacklist if not already there
       if ! grep -iq "^$MAC" "$BLACKLIST"; then
         echo "$MAC $IP $NAME" >> "$BLACKLIST"
         sed -i "/\b$MAC\b/d" /tmp/dhcp.leases
         BLACKLISTED=1
       fi
 
-      # 2) Remove any firewall rule for the MAC
       for SECTION in $(uci show firewall | grep ".src_mac='${MAC}'" | cut -d'.' -f2 | cut -d'=' -f1); do
         uci delete firewall."$SECTION"
         RULE_REMOVED=1
@@ -69,14 +93,14 @@ fi
         /etc/init.d/firewall restart
       fi
 
-      # 3) Notify if either blacklisted or firewall rule removed
       if [ "$BLACKLISTED" -eq 1 ] || [ "$RULE_REMOVED" -eq 1 ]; then
+        CHAT_ID=$(echo "$UPDATES" | jq '.result[-1].message.chat.id')
         curl -s -X POST "https://api.telegram.org/bot${TOKEN}/sendMessage" \
           -d text="⛔ $MAC ($NAME) at $IP has been *denied* internet access.
 $( [ "$BLACKLISTED" -eq 1 ] && echo '📛 Added to blacklist.' )
 $( [ "$RULE_REMOVED" -eq 1 ] && echo '🧱 Firewall rule removed.' )" \
           -d parse_mode="Markdown" \
-          -d chat_id=$(echo "$UPDATES" | jq '.result[-1].message.chat.id')
+          -d chat_id="$CHAT_ID"
       fi
       ;;
 
@@ -95,14 +119,15 @@ $( [ "$RULE_REMOVED" -eq 1 ] && echo '🧱 Firewall rule removed.' )" \
           uci set firewall.@rule[-1].target='ACCEPT'
           uci commit firewall
           /etc/init.d/firewall restart
+          CHAT_ID=$(echo "$UPDATES" | jq '.result[-1].message.chat.id')
           curl -s -X POST "https://api.telegram.org/bot${TOKEN}/sendMessage" \
-         -d text="♻️ $MAC ($NAME) at $IP recovered and added to whitelist." \
-         -d chat_id=$(echo "$UPDATES" | jq '.result[-1].message.chat.id')
+            -d text="♻️ $MAC ($NAME) at $IP recovered and added to whitelist." \
+            -d chat_id="$CHAT_ID"
         fi
       fi
-
+      ;;
   esac
 done
 
-# Clean up flags
+# Clean up MAC-specific flags
 rm -f /tmp/processed_*
