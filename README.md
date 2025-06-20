@@ -57,7 +57,8 @@ wget https://raw.githubusercontent.com/mdhasankhan5512/auto-notifier/refs/heads/
 | `/allow-MAC-IP-Name`              | Allow internet access for the device        |
 | `/deny-MAC-IP-Name`               | Deny access and blacklist the MAC           |
 | `/RBlacklist-MAC-IP-Name`         | Remove MAC from blacklist and re-allow      |
-
+| `/Allow-list`                     | To show allow list for internet access          |
+| `/Blacklist`                      | To show deny list or blacklist for internet access      |
 ### 🔍 Example
 
 ```text
