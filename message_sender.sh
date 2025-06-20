@@ -82,7 +82,9 @@ echo "$UPDATES" | jq -r '.result[].message.text' | grep -E '^/(allow|deny|RBlack
         sed -i "/\b$MAC\b/d" /tmp/dhcp.leases
         BLACKLISTED=1
       fi
-
+      if  grep -iq "^$MAC" "$MAC_LIST"; then
+        sed -i "/\b$MAC\b/d" /root/mac.txt
+      fi
       for SECTION in $(uci show firewall | grep ".src_mac='${MAC}'" | cut -d'.' -f2 | cut -d'=' -f1); do
         uci delete firewall."$SECTION"
         RULE_REMOVED=1
