@@ -68,6 +68,8 @@ echo "✅ Firewall rule added and firewall restarted."
 /etc/init.d/cron enable
 /etc/init.d/cron start
 (crontab -l 2>/dev/null | grep -v auto_scanner.sh; echo "* * * * * /usr/bin/auto_scanner.sh") | crontab -
+# Clean up old processed message logs every 2 days
+echo "0 0 */2 * * rm -f /tmp/telegram_processed/msg_*" | crontab -
 
 # Add loop.sh to rc.local if not already added
 grep -q '/usr/bin/loop.sh' /etc/rc.local || sed -i '/exit 0/i /usr/bin/loop.sh &' /etc/rc.local
